@@ -1,4 +1,4 @@
-package com.mapreduce.app.CategoryAverageSales;
+package com.mapreduce.app.PotentialSalesPerBrand;
 
 import java.lang.String;
 import java.io.IOException;
@@ -24,13 +24,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import com.mapreduce.*;
-import com.mapreduce.app.CategoryAverageSales.CompositeWritable;
-
+import com.mapreduce.app.PotentialSalesPerBrand.CompositeWritable;
 
 public class MapReduce {
 		
 	
-		public static class CategoryMapper extends Mapper<Object, Text, Text, CompositeWritable>
+		public static class CartMapper extends Mapper<Object, Text, Text, CompositeWritable>
 		{
 			private Text sales = new Text();
 			
@@ -38,35 +37,35 @@ public class MapReduce {
 			{
 				String[] split = value.toString().split(",");
 				String Event_Type = split[1];
-				String Category = split[4];
-				if (Event_Type.equals("purchase")) {
-				try
-				{
-					float Price = Float.parseFloat(split[6]);
-					sales.set(Category);
-					context.write(sales, new CompositeWritable(Price));
-				}
-				catch(NumberFormatException e){}
+				String Brand = split[5];
 				
-				}
+				if (Event_Type.equals("cart")) {
+					try
+					{
+						float Price = Float.parseFloat(split[6]);
+						sales.set(Brand);
+						context.write(sales, new CompositeWritable(Price));
+					}
+					catch(NumberFormatException e){}
+					
+					}
+				
 			}
 		}
-
 	
-		public static class CategoryReducer extends Reducer<Text,CompositeWritable,Text,FloatWritable>
+		public static class CartReducer extends Reducer<Text,CompositeWritable,Text,FloatWritable>
 		{
 			private FloatWritable result = new FloatWritable();
 			public void reduce(Text key, Iterable<CompositeWritable> values, Context context) throws IOException, InterruptedException
 			{
 				//System.out.println("--------------- MIT805 - EXECUTING REDUCER: " + key.toString());
-				int numberOfCategories = 0;
+				
 				float total = 0;
 				for(CompositeWritable val : values)
 				{
-					numberOfCategories = numberOfCategories +1;
 					total += val.price;
 				}																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																												
-				result.set(total/ numberOfCategories);
+				result.set(total);
 				context.write(key, result);
 			}
 		}
